@@ -42,7 +42,7 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
     拼音<span class="text-emerald-500">四声</span>大乱斗
   </h1>
   <p class="text-slate-500 text-sm md:text-base max-w-2xl mx-auto">
-    点选韵母生成四声卡片，再打乱顺序练习；点击卡片听发音。
+    点选韵母生成四声卡片（每行一声到四声）；需要时再打乱顺序练习。
   </p>
 </header>
 
@@ -67,7 +67,7 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
 
   <p id="parseHint" class="w-full text-sm text-slate-500 -mt-2 hidden"></p>
 
-  <div id="pinyinGrid" class="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6"></div>
+  <div id="pinyinGrid" class="w-full grid grid-cols-4 gap-2 sm:gap-4 md:gap-6"></div>
 
   <div class="text-center bg-amber-50/80 border border-amber-100 px-4 py-3 rounded-2xl w-full">
     <p class="text-xs md:text-sm text-amber-800/90 font-medium">
@@ -224,14 +224,14 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
     $grid.innerHTML = '';
     list.forEach((item, index) => {
       const el = document.createElement('div');
-      el.className = 'pinyin-card bg-white rounded-3xl p-5 border border-slate-100 flex flex-col items-center justify-between gap-3 cursor-pointer select-none relative overflow-hidden group';
+      el.className = 'pinyin-card bg-white rounded-2xl sm:rounded-3xl p-2.5 sm:p-5 border border-slate-100 flex flex-col items-center justify-between gap-1.5 sm:gap-3 cursor-pointer select-none relative overflow-hidden group';
       el.innerHTML =
-        '<div class="absolute top-3 left-3 w-7 h-7 rounded-full ' + item.bg + ' ' + item.text + ' text-xs font-black flex items-center justify-center">' + (index + 1) + '</div>' +
-        '<div class="absolute top-3 right-3 text-slate-300 group-hover:text-slate-500">🔊</div>' +
-        '<div class="mt-4 mb-2"><span class="pinyin-glyph text-5xl md:text-6xl font-black ' + item.text + '">' + item.char + '</span></div>' +
-        '<div class="text-center w-full bg-slate-50 rounded-2xl py-2 px-3 border border-slate-100 group-hover:bg-indigo-50/50">' +
-          '<p class="text-xs font-bold text-slate-700">' + item.name + '</p>' +
-          '<p class="text-[10px] text-slate-400 font-semibold">' + item.desc + ' ∙ ' + displayFinal(item.letter) + '</p>' +
+        '<div class="absolute top-1.5 left-1.5 sm:top-3 sm:left-3 w-5 h-5 sm:w-7 sm:h-7 rounded-full ' + item.bg + ' ' + item.text + ' text-[10px] sm:text-xs font-black flex items-center justify-center">' + (index + 1) + '</div>' +
+        '<div class="absolute top-1.5 right-1.5 sm:top-3 sm:right-3 text-slate-300 group-hover:text-slate-500 text-xs sm:text-base">🔊</div>' +
+        '<div class="mt-3 sm:mt-4 mb-1 sm:mb-2"><span class="pinyin-glyph text-2xl sm:text-5xl md:text-6xl font-black ' + item.text + '">' + item.char + '</span></div>' +
+        '<div class="text-center w-full bg-slate-50 rounded-xl sm:rounded-2xl py-1.5 sm:py-2 px-1 sm:px-3 border border-slate-100 group-hover:bg-indigo-50/50">' +
+          '<p class="text-[10px] sm:text-xs font-bold text-slate-700 leading-tight">' + item.name + '</p>' +
+          '<p class="text-[9px] sm:text-[10px] text-slate-400 font-semibold hidden sm:block">' + item.desc + ' ∙ ' + displayFinal(item.letter) + '</p>' +
         '</div>';
       el.addEventListener('click', () => {
         speak(item);
@@ -277,7 +277,7 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
     save();
     syncChips();
     setHint('');
-    render(doShuffle !== false);
+    render(!!doShuffle);
   }
 
   function toggle(finalName) {
@@ -294,7 +294,7 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
       return;
     }
     setHint('');
-    render(true);
+    render(false);
   }
 
   function buildUI() {
@@ -308,8 +308,8 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
       btn.addEventListener('click', fn);
       $groups.appendChild(btn);
     }
-    addGroup('all', '全部', () => setSel(ALL, true));
-    Object.keys(GROUPS).forEach((k) => addGroup(k, GROUPS[k].label, () => setSel(GROUPS[k].items, true)));
+    addGroup('all', '全部', () => setSel(ALL));
+    Object.keys(GROUPS).forEach((k) => addGroup(k, GROUPS[k].label, () => setSel(GROUPS[k].items)));
     addGroup('clear', '清空', () => {
       selected = [];
       save();
@@ -354,7 +354,7 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
   if (!selected.length) selected = ['a', 'o', 'e'];
   syncChips();
   setHint('');
-  render(true);
+  render(false);
 })();
 </script>
 </body>
