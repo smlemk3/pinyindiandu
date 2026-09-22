@@ -38,6 +38,16 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
 }
 .btn-order:hover{background:#f8fafc;border-color:#cbd5e1;color:#0f172a}
 .btn-order:active{transform:scale(.97)}
+.audio-seg{
+  display:inline-flex;padding:3px;border-radius:999px;border:1px solid #e2e8f0;background:#f8fafc;gap:2px;
+}
+.audio-seg button{
+  appearance:none;border:0;background:transparent;color:#64748b;
+  font-family:inherit;font-weight:700;font-size:0.8rem;
+  padding:0.4rem 0.75rem;border-radius:999px;cursor:pointer;transition:all .15s ease;white-space:nowrap;
+}
+.audio-seg button.active{background:#fff;color:#047857;box-shadow:0 1px 2px rgba(15,23,42,.08)}
+.audio-seg button:hover:not(.active){color:#0f172a}
 </style>
 </head>
 <body class="flex flex-col items-center justify-between min-h-screen p-4 md:p-8 text-slate-700">
@@ -70,7 +80,11 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
         <p class="text-sm text-slate-500 truncate" id="activeLabel"></p>
       </div>
     </div>
-    <div class="flex flex-wrap gap-2 self-start sm:self-auto">
+    <div class="flex flex-wrap gap-2 self-start sm:self-auto items-center">
+      <div class="audio-seg" role="group" aria-label="音频来源">
+        <button type="button" id="btnAudioLocal" data-src="local" class="active">本地音频</button>
+        <button type="button" id="btnAudioRemote" data-src="remote">远程音频</button>
+      </div>
       <button type="button" id="btnOrder" class="btn-order">☰ 还原顺序</button>
       <button type="button" id="btnShuffle" class="btn-shuffle">🔀 打乱顺序</button>
     </div>
@@ -81,8 +95,8 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
   <div id="pinyinGrid" class="w-full grid grid-cols-4 gap-2 sm:gap-4 md:gap-6"></div>
 
   <div class="text-center bg-amber-50/80 border border-amber-100 px-4 py-3 rounded-2xl w-full">
-    <p class="text-xs md:text-sm text-amber-800/90 font-medium">
-      点击卡片播放本地发音。i / u / ü / ui / iu 等会映射为 yi / wu / yu / wei / you。
+    <p id="audioTip" class="text-xs md:text-sm text-amber-800/90 font-medium">
+      点击卡片播放发音。i / u / ü / ui / iu 等会映射为 yi / wu / yu / wei / you。
     </p>
   </div>
 </main>
@@ -137,14 +151,19 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
   ];
 
   const KEY = 'pinyin-selected-finals';
+  const KEY_AUDIO = 'pinyin-audio-source';
   const $hint = document.getElementById('parseHint');
   const $count = document.getElementById('cardCount');
   const $label = document.getElementById('activeLabel');
   const $grid = document.getElementById('pinyinGrid');
   const $groups = document.getElementById('groupChips');
   const $finals = document.getElementById('finalChips');
+  const $tip = document.getElementById('audioTip');
+  const $btnLocal = document.getElementById('btnAudioLocal');
+  const $btnRemote = document.getElementById('btnAudioRemote');
 
   let selected = ['a', 'o', 'e'];
+  let audioSource = 'local';
   let audioObj = null;
 
   function uniq(arr) { return [...new Set(arr)]; }
@@ -207,12 +226,28 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
 
   function urls(audioKey, tone) {
     const k = audioKey + tone;
-    // 优先本地 audio/，远程仅作备用
-    return [
-      'audio/' + k + '.mp3',
-      'https://resources.allsetlearning.com/pronwiki/resources/pinyin-audio/' + k + '.mp3',
-      'https://cdn.jsdelivr.net/gh/hugolpz/audio-cmn@master/64k/syllabs/cmn-' + k + '.mp3'
-    ];
+    if (audioSource === 'remote') {
+      // jsDelivr 在国内通常比 AllSet 更快
+      return [
+        'https://cdn.jsdelivr.net/gh/hugolpz/audio-cmn@master/64k/syllabs/cmn-' + k + '.mp3',
+        'https://resources.allsetlearning.com/pronwiki/resources/pinyin-audio/' + k + '.mp3'
+      ];
+    }
+    return ['audio/' + k + '.mp3'];
+  }
+
+  function syncAudioUI() {
+    $btnLocal.classList.toggle('active', audioSource === 'local');
+    $btnRemote.classList.toggle('active', audioSource === 'remote');
+    $tip.textContent = audioSource === 'local'
+      ? '当前使用本地 audio/ 发音（更快更稳）。i / u / ü / ui / iu 等会映射为 yi / wu / yu / wei / you。'
+      : '当前使用远程在线发音（可能较慢，无本地文件时可用）。i / u / ü / ui / iu 等会映射为 yi / wu / yu / wei / you。';
+  }
+
+  function setAudioSource(src) {
+    audioSource = src === 'remote' ? 'remote' : 'local';
+    localStorage.setItem(KEY_AUDIO, audioSource);
+    syncAudioUI();
   }
 
   function speak(item) {
@@ -363,6 +398,9 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
     render(true);
   });
 
+  $btnLocal.addEventListener('click', () => setAudioSource('local'));
+  $btnRemote.addEventListener('click', () => setAudioSource('remote'));
+
   buildUI();
 
   try {
@@ -372,8 +410,12 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
     }
   } catch (e) {}
 
+  const savedAudio = localStorage.getItem(KEY_AUDIO);
+  if (savedAudio === 'remote' || savedAudio === 'local') audioSource = savedAudio;
+
   if (!selected.length) selected = ['a', 'o', 'e'];
   syncChips();
+  syncAudioUI();
   setHint('');
   render(false);
 })();
