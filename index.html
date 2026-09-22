@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>拼音四声墙 ∙ 趣味拼音</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700;900&family=Nunito:wght@400;600;700;800;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+<style>
+body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0%,#eff6ff 50%,#fdf4ff 100%);min-height:100vh}
+.fun-font{font-family:'ZCOOL KuaiLe',cursive,sans-serif}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.animate-float{animation:float 3s ease-in-out infinite}
+.pinyin-card{transition:all .3s cubic-bezier(.4,0,.2,1);box-shadow:0 10px 25px -5px rgba(0,0,0,.05),0 8px 10px -6px rgba(0,0,0,.05)}
+.pinyin-card:hover{transform:translateY(-6px) scale(1.03);box-shadow:0 20px 35px -10px rgba(0,0,0,.12)}
+.pinyin-card:active{transform:scale(.97)}
+.chip{transition:all .15s ease}
+.chip.active{background:linear-gradient(90deg,#10b981,#14b8a6);color:#fff;border-color:transparent}
+.pinyin-glyph{font-family:'Noto Sans','Segoe UI','Microsoft YaHei',Nunito,sans-serif;font-feature-settings:"kern" 1}
+</style>
+</head>
+<body class="flex flex-col items-center justify-between min-h-screen p-4 md:p-8 text-slate-700">
+
+<header class="w-full max-w-5xl mx-auto text-center py-6">
+  <div class="inline-flex items-center gap-2 bg-emerald-100 text-emerald-800 px-4 py-1.5 rounded-full text-sm font-bold mb-3 shadow-sm animate-float">
+    <span>✨ 快乐学拼音 ∙ 自选韵母四声墙</span>
+  </div>
+  <h1 class="text-4xl md:text-5xl font-extrabold text-slate-800 fun-font tracking-wide mb-3">
+    拼音<span class="text-emerald-500">四声</span>大乱斗
+  </h1>
+  <p class="text-slate-500 text-sm md:text-base max-w-2xl mx-auto">
+    输入要练习的韵母（如 <code class="bg-white/80 px-1.5 py-0.5 rounded text-rose-500 font-bold">iuo</code>），生成这些字母的四声音标并随机打乱。
+    <a href="zitie.html" class="ml-1 font-bold text-emerald-700 hover:underline">拼音字母字帖 →</a>
+  </p>
+</header>
+
+<main class="w-full max-w-5xl mx-auto bg-white/80 backdrop-blur-md rounded-3xl p-6 md:p-10 shadow-2xl border border-white flex flex-col items-center gap-6 my-auto">
+
+  <div class="w-full bg-slate-50 px-5 py-5 rounded-2xl border border-slate-100 shadow-inner space-y-4">
+    <div class="flex flex-col lg:flex-row gap-3 lg:items-end">
+      <label class="flex-1 block">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wide">练习韵母（空格 / 逗号 / 连续输入均可）</span>
+        <input id="finalsInput" type="text" value="aoe" placeholder="例如：iuo　或　a o e　或　ai,ei,ui"
+          class="mt-1.5 w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-lg font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+      </label>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" id="btnApply" class="px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold rounded-xl shadow-lg active:scale-95 transition-all">生成卡片</button>
+        <button type="button" id="btnShuffle" class="px-5 py-3 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold rounded-xl shadow-sm active:scale-95 transition-all">🔀 打乱顺序</button>
+      </div>
+    </div>
+    <div>
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">快捷分组</p>
+      <div class="flex flex-wrap gap-2" id="groupChips"></div>
+    </div>
+    <div>
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">点选韵母（可多选）</p>
+      <div class="flex flex-wrap gap-2" id="finalChips"></div>
+    </div>
+    <p id="parseHint" class="text-sm text-slate-500"></p>
+  </div>
+
+  <div class="w-full flex flex-col sm:flex-row justify-between items-center gap-3">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 text-white flex items-center justify-center text-xl shadow-md">🎵</div>
+      <div>
+        <p class="text-xs text-slate-400 font-semibold uppercase">当前卡片</p>
+        <p class="text-xl font-black text-slate-800" id="cardCount">0 个音标</p>
+      </div>
+    </div>
+    <p class="text-sm text-slate-500" id="activeLabel"></p>
+  </div>
+
+  <div id="pinyinGrid" class="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6"></div>
+
+  <div class="text-center bg-amber-50/80 border border-amber-100 p-4 rounded-2xl w-full flex items-center justify-center gap-3">
+    <span class="text-2xl">💡</span>
+    <p class="text-xs md:text-sm text-amber-800 font-medium text-left">
+      点击卡片播放发音（本地 audio/ 目录）。i / u / ü / ui / iu 等按 yi / wu / yu / wei / you 等音节发音。
+    </p>
+  </div>
+</main>
+
+<footer class="text-center text-xs text-slate-400 py-6"><p>© 2026 趣味拼音启蒙 ∙ 互动音标墙</p></footer>
+
+<script>
+(function () {
+  const GROUPS = {
+    simple:   { label: '单韵母',   items: ['a', 'o', 'e', 'i', 'u', 'ü'] },
+    compound: { label: '复韵母',   items: ['ai', 'ei', 'ui', 'ao', 'ou', 'iu', 'ie', 'üe', 'er'] },
+    front:    { label: '前鼻韵母', items: ['an', 'en', 'in', 'un', 'ün'] },
+    back:     { label: '后鼻韵母', items: ['ang', 'eng', 'ing', 'ong'] }
+  };
+
+  const ALL = [...GROUPS.simple.items, ...GROUPS.compound.items, ...GROUPS.front.items, ...GROUPS.back.items];
+  const BY_LEN = [...ALL].sort((a, b) => b.length - a.length);
+
+  const AUDIO = {
+    a:'a', o:'o', e:'e', i:'yi', u:'wu', ü:'yu',
+    ai:'ai', ei:'ei', ui:'wei', ao:'ao', ou:'ou', iu:'you', ie:'ye', üe:'yue', er:'er',
+    an:'an', en:'en', in:'yin', un:'wen', ün:'yun',
+    ang:'ang', eng:'eng', ing:'ying', ong:'yong'
+  };
+
+  const VOWEL = {
+    // 拼音教材用单层 ɑ（U+0251），不用英文双层 a
+    a: ['ɑ', 'ɑ\u0304', 'ɑ\u0301', 'ɑ\u030C', 'ɑ\u0300'],
+    o: ['o', 'ō', 'ó', 'ǒ', 'ò'],
+    e: ['e', 'ē', 'é', 'ě', 'è'],
+    i: ['i', 'ī', 'í', 'ǐ', 'ì'],
+    u: ['u', 'ū', 'ú', 'ǔ', 'ù'],
+    ü: ['ü', 'ǖ', 'ǘ', 'ǚ', 'ǜ']
+  };
+
+  const TONE = [
+    null,
+    { name:'一声 阴平', desc:'高平调' },
+    { name:'二声 阳平', desc:'高升调' },
+    { name:'三声 上声', desc:'降升调' },
+    { name:'四声 去声', desc:'全降调' }
+  ];
+
+  const THEME = [
+    { color:'from-rose-400 to-pink-500', bg:'bg-rose-50', text:'text-rose-600' },
+    { color:'from-amber-400 to-orange-500', bg:'bg-amber-50', text:'text-amber-600' },
+    { color:'from-sky-400 to-blue-500', bg:'bg-sky-50', text:'text-sky-600' },
+    { color:'from-emerald-400 to-teal-500', bg:'bg-emerald-50', text:'text-emerald-600' },
+    { color:'from-violet-400 to-purple-500', bg:'bg-violet-50', text:'text-violet-600' },
+    { color:'from-fuchsia-400 to-pink-500', bg:'bg-fuchsia-50', text:'text-fuchsia-600' },
+    { color:'from-lime-400 to-green-500', bg:'bg-lime-50', text:'text-lime-600' },
+    { color:'from-cyan-400 to-sky-500', bg:'bg-cyan-50', text:'text-cyan-600' }
+  ];
+
+  const KEY = 'pinyin-selected-finals';
+  const $input = document.getElementById('finalsInput');
+  const $hint = document.getElementById('parseHint');
+  const $count = document.getElementById('cardCount');
+  const $label = document.getElementById('activeLabel');
+  const $grid = document.getElementById('pinyinGrid');
+  const $groups = document.getElementById('groupChips');
+  const $finals = document.getElementById('finalChips');
+
+  let selected = ['a', 'o', 'e'];
+  let audioObj = null;
+
+  function uniq(arr) { return [...new Set(arr)]; }
+
+  // 展示用：把拉丁 a 换成拼音单层 ɑ
+  function displayFinal(s) {
+    return String(s).replace(/a/g, 'ɑ').replace(/A/g, 'ɑ');
+  }
+
+  function norm(s) {
+    return String(s).trim().toLowerCase().replace(/u:/g, 'ü').replace(/v/g, 'ü');
+  }
+
+  function withTone(finalName, tone) {
+    let s = norm(finalName);
+    for (const v of ['a', 'o', 'e']) {
+      const i = s.indexOf(v);
+      if (i >= 0) return s.slice(0, i) + VOWEL[v][tone] + s.slice(i + 1);
+    }
+    if (s.includes('iu')) return s.replace('u', VOWEL.u[tone]);
+    if (s.includes('ui')) return s.replace('i', VOWEL.i[tone]);
+    for (const v of ['ü', 'u', 'i']) {
+      const i = s.lastIndexOf(v);
+      if (i >= 0) return s.slice(0, i) + VOWEL[v][tone] + s.slice(i + v.length);
+    }
+    return s;
+  }
+
+  function parse(text) {
+    let s = norm(text).replace(/[,，;；、|]+/g, ' ').replace(/\s+/g, ' ').trim();
+    const found = [], unknown = [];
+    if (!s) return { found, unknown };
+    if (s.includes(' ')) {
+      s.split(' ').forEach((t) => {
+        if (!t) return;
+        if (ALL.includes(t)) found.push(t); else unknown.push(t);
+      });
+      return { found: uniq(found), unknown };
+    }
+    let rest = s;
+    while (rest.length) {
+      let hit = null;
+      for (const f of BY_LEN) { if (rest.startsWith(f)) { hit = f; break; } }
+      if (hit) { found.push(hit); rest = rest.slice(hit.length); }
+      else { unknown.push(rest[0]); rest = rest.slice(1); }
+    }
+    return { found: uniq(found), unknown };
+  }
+
+  function theme(letter) {
+    const i = ALL.indexOf(letter);
+    return THEME[(i >= 0 ? i : 0) % THEME.length];
+  }
+
+  function buildCards(list) {
+    const cards = [];
+    list.forEach((letter) => {
+      const th = theme(letter);
+      for (let t = 1; t <= 4; t++) {
+        cards.push({
+          char: withTone(letter, t),
+          letter, tone: t,
+          audio: AUDIO[letter] || letter,
+          name: TONE[t].name,
+          desc: TONE[t].desc,
+          color: th.color, bg: th.bg, text: th.text
+        });
+      }
+    });
+    return cards;
+  }
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function urls(audioKey, tone) {
+    const k = audioKey + tone;
+    // 优先本地 audio/，远程仅作备用
+    return [
+      'audio/' + k + '.mp3',
+      'https://resources.allsetlearning.com/pronwiki/resources/pinyin-audio/' + k + '.mp3',
+      'https://cdn.jsdelivr.net/gh/hugolpz/audio-cmn@master/64k/syllabs/cmn-' + k + '.mp3'
+    ];
+  }
+
+  function speak(item) {
+    const list = urls(item.audio, item.tone);
+    let i = 0;
+    if (audioObj) { audioObj.pause(); audioObj = null; }
+    function next() {
+      if (i >= list.length) return;
+      const a = new Audio(list[i]);
+      audioObj = a;
+      a.play().catch(() => { i++; next(); });
+      a.onerror = () => { i++; next(); };
+    }
+    next();
+  }
+
+  function render(doShuffle) {
+    const cards = buildCards(selected);
+    const list = doShuffle ? shuffle(cards) : cards;
+    $grid.innerHTML = '';
+    list.forEach((item, index) => {
+      const el = document.createElement('div');
+      el.className = 'pinyin-card bg-white rounded-3xl p-5 border border-slate-100 flex flex-col items-center justify-between gap-3 cursor-pointer select-none relative overflow-hidden group';
+      el.innerHTML =
+        '<div class="absolute top-3 left-3 w-7 h-7 rounded-full ' + item.bg + ' ' + item.text + ' text-xs font-black flex items-center justify-center">' + (index + 1) + '</div>' +
+        '<div class="absolute top-3 right-3 text-slate-300 group-hover:text-slate-500">🔊</div>' +
+        '<div class="mt-4 mb-2"><span class="pinyin-glyph text-5xl md:text-6xl font-black ' + item.text + '">' + item.char + '</span></div>' +
+        '<div class="text-center w-full bg-slate-50 rounded-2xl py-2 px-3 border border-slate-100 group-hover:bg-indigo-50/50">' +
+          '<p class="text-xs font-bold text-slate-700">' + item.name + '</p>' +
+          '<p class="text-[10px] text-slate-400 font-semibold">' + item.desc + ' ∙ ' + displayFinal(item.letter) + '</p>' +
+        '</div>';
+      el.addEventListener('click', () => {
+        speak(item);
+        el.classList.add('scale-95');
+        setTimeout(() => el.classList.remove('scale-95'), 150);
+      });
+      $grid.appendChild(el);
+    });
+    $count.textContent = list.length + ' 个音标（' + selected.length + ' 个韵母 × 4 声）';
+    $label.textContent = selected.length ? ('当前：' + selected.map(displayFinal).join('、')) : '尚未选择韵母';
+  }
+
+  function syncInput() { $input.value = selected.join(''); }
+
+  function syncChips() {
+    $finals.querySelectorAll('[data-final]').forEach((el) => {
+      el.classList.toggle('active', selected.includes(el.dataset.final));
+    });
+    $groups.querySelectorAll('[data-group]').forEach((el) => {
+      const k = el.dataset.group;
+      if (k === 'all') el.classList.toggle('active', selected.length === ALL.length);
+      else if (k === 'clear') el.classList.remove('active');
+      else {
+        const g = GROUPS[k];
+        el.classList.toggle('active', !!(g && g.items.every((f) => selected.includes(f))));
+      }
+    });
+  }
+
+  function save() { localStorage.setItem(KEY, JSON.stringify(selected)); }
+
+  function apply(doShuffle) {
+    const { found, unknown } = parse($input.value);
+    if (!found.length) {
+      $hint.innerHTML = '<span class="text-rose-600 font-semibold">没有识别到有效韵母，请输入如 iuo、aoe、ai ei ui</span>';
+      return;
+    }
+    selected = found;
+    save();
+    syncChips();
+    syncInput();
+    let msg = '已生成：<strong class="text-emerald-700">' + found.map(displayFinal).join('、') + '</strong>';
+    if (unknown.length) msg += '　<span class="text-amber-700">未识别：' + unknown.join('、') + '</span>';
+    $hint.innerHTML = msg;
+    render(doShuffle !== false);
+  }
+
+  function setSel(list, doShuffle) {
+    selected = uniq(list.filter((f) => ALL.includes(f)));
+    save();
+    syncInput();
+    syncChips();
+    $hint.innerHTML = selected.length
+      ? ('已生成：<strong class="text-emerald-700">' + selected.map(displayFinal).join('、') + '</strong>')
+      : '';
+    render(doShuffle !== false);
+  }
+
+  function toggle(finalName) {
+    if (selected.includes(finalName)) selected = selected.filter((f) => f !== finalName);
+    else selected = [...selected, finalName];
+    selected = ALL.filter((f) => selected.includes(f));
+    save();
+    syncInput();
+    syncChips();
+    if (!selected.length) {
+      $grid.innerHTML = '';
+      $count.textContent = '0 个音标';
+      $label.textContent = '尚未选择韵母';
+      $hint.innerHTML = '<span class="text-rose-600">请至少选择一个韵母</span>';
+      return;
+    }
+    $hint.innerHTML = '已生成：<strong class="text-emerald-700">' + selected.map(displayFinal).join('、') + '</strong>';
+    render(true);
+  }
+
+  function buildUI() {
+    $groups.innerHTML = '';
+    function addGroup(key, label, fn) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.dataset.group = key;
+      btn.className = 'chip px-3 py-1.5 rounded-full border border-slate-200 bg-white text-sm font-bold text-slate-600';
+      btn.textContent = label;
+      btn.addEventListener('click', fn);
+      $groups.appendChild(btn);
+    }
+    addGroup('all', '全部韵母', () => setSel(ALL, true));
+    Object.keys(GROUPS).forEach((k) => addGroup(k, GROUPS[k].label, () => setSel(GROUPS[k].items, true)));
+    addGroup('clear', '清空', () => {
+      selected = [];
+      save();
+      syncInput();
+      syncChips();
+      $grid.innerHTML = '';
+      $count.textContent = '0 个音标';
+      $label.textContent = '尚未选择韵母';
+      $hint.textContent = '请输入或点选韵母';
+    });
+
+    $finals.innerHTML = '';
+    ALL.forEach((f) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.dataset.final = f;
+      btn.className = 'final-chip chip px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-sm font-black text-slate-700 min-w-[2.5rem] pinyin-glyph';
+      btn.textContent = displayFinal(f);
+      btn.title = '音频：' + (AUDIO[f] || f);
+      btn.addEventListener('click', () => toggle(f));
+      $finals.appendChild(btn);
+    });
+  }
+
+  document.getElementById('btnApply').addEventListener('click', () => apply(true));
+  document.getElementById('btnShuffle').addEventListener('click', () => {
+    if (!selected.length) apply(true);
+    else render(true);
+  });
+  $input.addEventListener('keydown', (e) => { if (e.key === 'Enter') apply(true); });
+
+  buildUI();
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (Array.isArray(saved) && saved.length) {
+      selected = saved.map(norm).filter((f) => ALL.includes(f));
+    }
+  } catch (e) {}
+
+  if (!selected.length) selected = ['a', 'o', 'e'];
+  syncInput();
+  syncChips();
+  $hint.innerHTML = '已生成：<strong class="text-emerald-700">' + selected.map(displayFinal).join('、') + '</strong>';
+  render(true);
+})();
+</script>
+</body>
+</html>
