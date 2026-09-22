@@ -14,67 +14,64 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
 .pinyin-card{transition:all .3s cubic-bezier(.4,0,.2,1);box-shadow:0 10px 25px -5px rgba(0,0,0,.05),0 8px 10px -6px rgba(0,0,0,.05)}
 .pinyin-card:hover{transform:translateY(-6px) scale(1.03);box-shadow:0 20px 35px -10px rgba(0,0,0,.12)}
 .pinyin-card:active{transform:scale(.97)}
-.chip{transition:all .15s ease}
+.chip{transition:all .15s ease;cursor:pointer}
+.chip:hover{border-color:#6ee7b7;background:#ecfdf5}
 .chip.active{background:linear-gradient(90deg,#10b981,#14b8a6);color:#fff;border-color:transparent}
+.final-chip{font-family:'Noto Sans','Segoe UI','Microsoft YaHei',sans-serif}
+.final-chip.active{background:#ecfdf5;border-color:#34d399;color:#047857;box-shadow:inset 0 0 0 1px #6ee7b7}
+.final-chip.active:hover{background:#d1fae5}
 .pinyin-glyph{font-family:'Noto Sans','Segoe UI','Microsoft YaHei',Nunito,sans-serif;font-feature-settings:"kern" 1}
+.toolbar{background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%)}
+.btn-shuffle{
+  appearance:none;border:1px solid #d1fae5;background:#ecfdf5;color:#047857;
+  font-family:inherit;font-weight:700;font-size:0.9rem;
+  padding:0.55rem 1.1rem;border-radius:999px;cursor:pointer;
+  transition:all .15s ease;white-space:nowrap;
+}
+.btn-shuffle:hover{background:#10b981;border-color:#10b981;color:#fff}
+.btn-shuffle:active{transform:scale(.97)}
 </style>
 </head>
 <body class="flex flex-col items-center justify-between min-h-screen p-4 md:p-8 text-slate-700">
 
 <header class="w-full max-w-5xl mx-auto text-center py-6">
   <div class="inline-flex items-center gap-2 bg-emerald-100 text-emerald-800 px-4 py-1.5 rounded-full text-sm font-bold mb-3 shadow-sm animate-float">
-    <span>✨ 快乐学拼音 ∙ 自选韵母四声墙</span>
+    <span>✨ 快乐学拼音 ∙ 四声音标墙</span>
   </div>
   <h1 class="text-4xl md:text-5xl font-extrabold text-slate-800 fun-font tracking-wide mb-3">
     拼音<span class="text-emerald-500">四声</span>大乱斗
   </h1>
   <p class="text-slate-500 text-sm md:text-base max-w-2xl mx-auto">
-    输入要练习的韵母（如 <code class="bg-white/80 px-1.5 py-0.5 rounded text-rose-500 font-bold">iuo</code>），生成这些字母的四声音标并随机打乱。
+    点选韵母生成四声卡片，再打乱顺序练习；点击卡片听发音。
   </p>
 </header>
 
 <main class="w-full max-w-5xl mx-auto bg-white/80 backdrop-blur-md rounded-3xl p-6 md:p-10 shadow-2xl border border-white flex flex-col items-center gap-6 my-auto">
 
-  <div class="w-full bg-slate-50 px-5 py-5 rounded-2xl border border-slate-100 shadow-inner space-y-4">
-    <div class="flex flex-col lg:flex-row gap-3 lg:items-end">
-      <label class="flex-1 block">
-        <span class="text-xs font-bold text-slate-400 uppercase tracking-wide">练习韵母（空格 / 逗号 / 连续输入均可）</span>
-        <input id="finalsInput" type="text" value="aoe" placeholder="例如：iuo　或　a o e　或　ai,ei,ui"
-          class="mt-1.5 w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-lg font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-400" />
-      </label>
-      <div class="flex flex-wrap gap-2">
-        <button type="button" id="btnApply" class="px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold rounded-xl shadow-lg active:scale-95 transition-all">生成卡片</button>
-        <button type="button" id="btnShuffle" class="px-5 py-3 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold rounded-xl shadow-sm active:scale-95 transition-all">🔀 打乱顺序</button>
-      </div>
-    </div>
-    <div>
-      <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">快捷分组</p>
-      <div class="flex flex-wrap gap-2" id="groupChips"></div>
-    </div>
-    <div>
-      <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">点选韵母（可多选）</p>
-      <div class="flex flex-wrap gap-2" id="finalChips"></div>
-    </div>
-    <p id="parseHint" class="text-sm text-slate-500"></p>
+  <div class="w-full toolbar rounded-2xl border border-slate-100 px-4 py-4 sm:px-5 space-y-3.5 shadow-sm">
+    <div class="flex flex-wrap gap-2" id="groupChips"></div>
+    <div class="h-px bg-slate-100"></div>
+    <div class="flex flex-wrap gap-2" id="finalChips"></div>
   </div>
 
-  <div class="w-full flex flex-col sm:flex-row justify-between items-center gap-3">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 text-white flex items-center justify-center text-xl shadow-md">🎵</div>
-      <div>
-        <p class="text-xs text-slate-400 font-semibold uppercase">当前卡片</p>
-        <p class="text-xl font-black text-slate-800" id="cardCount">0 个音标</p>
+  <div class="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="w-10 h-10 shrink-0 rounded-xl bg-gradient-to-tr from-emerald-400 to-teal-500 text-white flex items-center justify-center text-lg shadow-md">🎵</div>
+      <div class="min-w-0">
+        <p class="text-xl font-black text-slate-800 leading-tight" id="cardCount">0 个音标</p>
+        <p class="text-sm text-slate-500 truncate" id="activeLabel"></p>
       </div>
     </div>
-    <p class="text-sm text-slate-500" id="activeLabel"></p>
+    <button type="button" id="btnShuffle" class="btn-shuffle self-start sm:self-auto">🔀 打乱顺序</button>
   </div>
+
+  <p id="parseHint" class="w-full text-sm text-slate-500 -mt-2 hidden"></p>
 
   <div id="pinyinGrid" class="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6"></div>
 
-  <div class="text-center bg-amber-50/80 border border-amber-100 p-4 rounded-2xl w-full flex items-center justify-center gap-3">
-    <span class="text-2xl">💡</span>
-    <p class="text-xs md:text-sm text-amber-800 font-medium text-left">
-      点击卡片播放发音（本地 audio/ 目录）。i / u / ü / ui / iu 等按 yi / wu / yu / wei / you 等音节发音。
+  <div class="text-center bg-amber-50/80 border border-amber-100 px-4 py-3 rounded-2xl w-full">
+    <p class="text-xs md:text-sm text-amber-800/90 font-medium">
+      点击卡片播放本地发音。i / u / ü / ui / iu 等会映射为 yi / wu / yu / wei / you。
     </p>
   </div>
 </main>
@@ -91,7 +88,6 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
   };
 
   const ALL = [...GROUPS.simple.items, ...GROUPS.compound.items, ...GROUPS.front.items, ...GROUPS.back.items];
-  const BY_LEN = [...ALL].sort((a, b) => b.length - a.length);
 
   const AUDIO = {
     a:'a', o:'o', e:'e', i:'yi', u:'wu', ü:'yu',
@@ -130,7 +126,6 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
   ];
 
   const KEY = 'pinyin-selected-finals';
-  const $input = document.getElementById('finalsInput');
   const $hint = document.getElementById('parseHint');
   const $count = document.getElementById('cardCount');
   const $label = document.getElementById('activeLabel');
@@ -165,27 +160,6 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
       if (i >= 0) return s.slice(0, i) + VOWEL[v][tone] + s.slice(i + v.length);
     }
     return s;
-  }
-
-  function parse(text) {
-    let s = norm(text).replace(/[,，;；、|]+/g, ' ').replace(/\s+/g, ' ').trim();
-    const found = [], unknown = [];
-    if (!s) return { found, unknown };
-    if (s.includes(' ')) {
-      s.split(' ').forEach((t) => {
-        if (!t) return;
-        if (ALL.includes(t)) found.push(t); else unknown.push(t);
-      });
-      return { found: uniq(found), unknown };
-    }
-    let rest = s;
-    while (rest.length) {
-      let hit = null;
-      for (const f of BY_LEN) { if (rest.startsWith(f)) { hit = f; break; } }
-      if (hit) { found.push(hit); rest = rest.slice(hit.length); }
-      else { unknown.push(rest[0]); rest = rest.slice(1); }
-    }
-    return { found: uniq(found), unknown };
   }
 
   function theme(letter) {
@@ -266,11 +240,9 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
       });
       $grid.appendChild(el);
     });
-    $count.textContent = list.length + ' 个音标（' + selected.length + ' 个韵母 × 4 声）';
-    $label.textContent = selected.length ? ('当前：' + selected.map(displayFinal).join('、')) : '尚未选择韵母';
+    $count.textContent = list.length + ' 个音标 · ' + selected.length + ' 个韵母';
+    $label.textContent = selected.length ? selected.map(displayFinal).join('  ') : '点上面的韵母开始练习';
   }
-
-  function syncInput() { $input.value = selected.join(''); }
 
   function syncChips() {
     $finals.querySelectorAll('[data-final]').forEach((el) => {
@@ -289,30 +261,22 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
 
   function save() { localStorage.setItem(KEY, JSON.stringify(selected)); }
 
-  function apply(doShuffle) {
-    const { found, unknown } = parse($input.value);
-    if (!found.length) {
-      $hint.innerHTML = '<span class="text-rose-600 font-semibold">没有识别到有效韵母，请输入如 iuo、aoe、ai ei ui</span>';
+  function setHint(html, isError) {
+    if (!html) {
+      $hint.classList.add('hidden');
+      $hint.innerHTML = '';
       return;
     }
-    selected = found;
-    save();
-    syncChips();
-    syncInput();
-    let msg = '已生成：<strong class="text-emerald-700">' + found.map(displayFinal).join('、') + '</strong>';
-    if (unknown.length) msg += '　<span class="text-amber-700">未识别：' + unknown.join('、') + '</span>';
-    $hint.innerHTML = msg;
-    render(doShuffle !== false);
+    $hint.classList.remove('hidden');
+    $hint.innerHTML = html;
+    $hint.className = 'w-full text-sm -mt-2 ' + (isError ? 'text-rose-600 font-semibold' : 'text-slate-500');
   }
 
   function setSel(list, doShuffle) {
     selected = uniq(list.filter((f) => ALL.includes(f)));
     save();
-    syncInput();
     syncChips();
-    $hint.innerHTML = selected.length
-      ? ('已生成：<strong class="text-emerald-700">' + selected.map(displayFinal).join('、') + '</strong>')
-      : '';
+    setHint('');
     render(doShuffle !== false);
   }
 
@@ -321,49 +285,47 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
     else selected = [...selected, finalName];
     selected = ALL.filter((f) => selected.includes(f));
     save();
-    syncInput();
     syncChips();
     if (!selected.length) {
       $grid.innerHTML = '';
       $count.textContent = '0 个音标';
-      $label.textContent = '尚未选择韵母';
-      $hint.innerHTML = '<span class="text-rose-600">请至少选择一个韵母</span>';
+      $label.textContent = '点上面的韵母开始练习';
+      setHint('请至少选择一个韵母', true);
       return;
     }
-    $hint.innerHTML = '已生成：<strong class="text-emerald-700">' + selected.map(displayFinal).join('、') + '</strong>';
+    setHint('');
     render(true);
   }
 
   function buildUI() {
     $groups.innerHTML = '';
-    function addGroup(key, label, fn) {
+    function addGroup(key, label, fn, extraClass) {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.dataset.group = key;
-      btn.className = 'chip px-3 py-1.5 rounded-full border border-slate-200 bg-white text-sm font-bold text-slate-600';
+      btn.className = 'chip px-3 py-1.5 rounded-full border border-slate-200 bg-white text-sm font-bold text-slate-600 ' + (extraClass || '');
       btn.textContent = label;
       btn.addEventListener('click', fn);
       $groups.appendChild(btn);
     }
-    addGroup('all', '全部韵母', () => setSel(ALL, true));
+    addGroup('all', '全部', () => setSel(ALL, true));
     Object.keys(GROUPS).forEach((k) => addGroup(k, GROUPS[k].label, () => setSel(GROUPS[k].items, true)));
     addGroup('clear', '清空', () => {
       selected = [];
       save();
-      syncInput();
       syncChips();
       $grid.innerHTML = '';
       $count.textContent = '0 个音标';
-      $label.textContent = '尚未选择韵母';
-      $hint.textContent = '请输入或点选韵母';
-    });
+      $label.textContent = '点上面的韵母开始练习';
+      setHint('');
+    }, 'text-slate-400 border-dashed');
 
     $finals.innerHTML = '';
     ALL.forEach((f) => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.dataset.final = f;
-      btn.className = 'final-chip chip px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-sm font-black text-slate-700 min-w-[2.5rem] pinyin-glyph';
+      btn.className = 'final-chip chip px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-sm font-black text-slate-700 min-w-[2.5rem]';
       btn.textContent = displayFinal(f);
       btn.title = '音频：' + (AUDIO[f] || f);
       btn.addEventListener('click', () => toggle(f));
@@ -371,12 +333,14 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
     });
   }
 
-  document.getElementById('btnApply').addEventListener('click', () => apply(true));
   document.getElementById('btnShuffle').addEventListener('click', () => {
-    if (!selected.length) apply(true);
-    else render(true);
+    if (!selected.length) {
+      setHint('请至少选择一个韵母', true);
+      return;
+    }
+    setHint('');
+    render(true);
   });
-  $input.addEventListener('keydown', (e) => { if (e.key === 'Enter') apply(true); });
 
   buildUI();
 
@@ -388,9 +352,8 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
   } catch (e) {}
 
   if (!selected.length) selected = ['a', 'o', 'e'];
-  syncInput();
   syncChips();
-  $hint.innerHTML = '已生成：<strong class="text-emerald-700">' + selected.map(displayFinal).join('、') + '</strong>';
+  setHint('');
   render(true);
 })();
 </script>
