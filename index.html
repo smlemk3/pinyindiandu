@@ -30,6 +30,14 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
 }
 .btn-shuffle:hover{background:#10b981;border-color:#10b981;color:#fff}
 .btn-shuffle:active{transform:scale(.97)}
+.btn-order{
+  appearance:none;border:1px solid #e2e8f0;background:#fff;color:#475569;
+  font-family:inherit;font-weight:700;font-size:0.9rem;
+  padding:0.55rem 1.1rem;border-radius:999px;cursor:pointer;
+  transition:all .15s ease;white-space:nowrap;
+}
+.btn-order:hover{background:#f8fafc;border-color:#cbd5e1;color:#0f172a}
+.btn-order:active{transform:scale(.97)}
 </style>
 </head>
 <body class="flex flex-col items-center justify-between min-h-screen p-4 md:p-8 text-slate-700">
@@ -62,7 +70,10 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
         <p class="text-sm text-slate-500 truncate" id="activeLabel"></p>
       </div>
     </div>
-    <button type="button" id="btnShuffle" class="btn-shuffle self-start sm:self-auto">🔀 打乱顺序</button>
+    <div class="flex flex-wrap gap-2 self-start sm:self-auto">
+      <button type="button" id="btnOrder" class="btn-order">☰ 还原顺序</button>
+      <button type="button" id="btnShuffle" class="btn-shuffle">🔀 打乱顺序</button>
+    </div>
   </div>
 
   <p id="parseHint" class="w-full text-sm text-slate-500 -mt-2 hidden"></p>
@@ -333,12 +344,22 @@ body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#f0fdf4 0
     });
   }
 
-  document.getElementById('btnShuffle').addEventListener('click', () => {
+  function ensureSelection() {
     if (!selected.length) {
       setHint('请至少选择一个韵母', true);
-      return;
+      return false;
     }
     setHint('');
+    return true;
+  }
+
+  document.getElementById('btnOrder').addEventListener('click', () => {
+    if (!ensureSelection()) return;
+    render(false);
+  });
+
+  document.getElementById('btnShuffle').addEventListener('click', () => {
+    if (!ensureSelection()) return;
     render(true);
   });
 
